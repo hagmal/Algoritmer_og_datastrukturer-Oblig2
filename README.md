@@ -1,4 +1,6 @@
 # Algoritmer og datastrukturer - Oblig2
+Andre obligatoriske oppgave i faget Algoritmer og datastrukturer. Den ble levert via Github classroom, og er derfor bare kopiert hit. Prosjektstrukturen og klasseskjellettet (som inkluderer Node-klassen, private variabler og hjelpemetoden fraTilKontroll) ble levert av universitetet. Det opprinnelige prosjektet inneholder i tillegg to grensesnitt som definerer funksjonene til en generell beholder og en liste. Dette har jeg ikke tatt dette med i denne mappen, da disse grensenittene ble levert av universitetet.
+Ellers er kode som er skrevet under // Oppgave x skrevet av meg.
 
 ## Oppgave 1
 I konstruktøren public DobbeltLenketListe() har jeg laget en tom dobbeltlenket liste, ved å sette hode og hale til null, og antall og endringer til 0.
