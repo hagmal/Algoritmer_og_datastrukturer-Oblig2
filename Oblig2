@@ -1,0 +1,483 @@
+import java.util.*;
+
+public class DobbeltLenketListe<T> implements Liste<T> {
+    // Innebygd (Trenger ikke endres)
+
+    /**
+     * Node class
+     *
+     * @param <T>
+     */
+    private static final class Node<T> {
+        private T verdi;
+        private Node<T> forrige, neste;
+
+        private Node(T verdi, Node<T> forrige, Node<T> neste) {
+            this.verdi = verdi; this.forrige = forrige; this.neste = neste;
+        }
+        private Node(T verdi) {this(verdi, null, null);}
+    }
+
+    private Node<T> hode;
+    private Node<T> hale;
+    private int antall;
+    private int endringer;
+
+    public void fraTilKontroll(int fra, int til) {
+        if (fra < 0) throw new IndexOutOfBoundsException("fra("+fra+") er negativ.");
+        if (til > antall) throw new IndexOutOfBoundsException("til("+til+") er større enn antall("+antall+")");
+        if (fra > til) throw new IllegalArgumentException("fra("+fra+") er større enn til("+til+") - Ulovlig intervall.");
+    }
+
+    // Oppgave 0
+    public static int gruppeMedlemmer() {
+        return 1; // Returner hvor mange som er i gruppa deres
+    }
+
+    // Oppgave 1
+    // Konstruktør som genererer en tom dobbeltlenket liste
+    public DobbeltLenketListe() {
+
+        hode = null; // Ingen noder, så hode peker på null
+        hale = null; // Ingen noder, så hale peker på null
+        antall = 0; // Antallet noder er 0
+        endringer = 0; // Ingen endringer er gjort enda
+    }
+
+    // Konstruktør som lager en dobbeltlenket liste fra arrayet a, uten null-verdier
+    public DobbeltLenketListe(T[] a) {
+        Objects.requireNonNull(a, "Arrayet kan ikke være null");
+
+        hode = null;
+        hale = null;
+        antall = 0;
+        endringer = 0;
+
+        // Bruker for-løkke til å gå gjennom arrayet
+        for (int i = 0; i < a.length; i++) {
+            // Sjekker at ikke verdien i arrayet er null
+            if (a[i] != null) {
+                leggTil(a[i]); // Legger til verdien i ny node
+            }
+        }
+    }
+
+    // Metode for å legge til en verdi i listen
+    public void leggTil(T verdi) {
+        // Oppretter en ny node med verdien
+        // For hver nye node settes forrige- og neste-pekerne til null
+        Node<T> nyNode = new Node<>(verdi);
+
+        // Sjekker om den dobbeltlenkede listen er tom
+        if (hode == null) {
+            hode = nyNode; // Setter hode til den nye noden
+            hale = nyNode; // Setter hale til den nye noden
+        }
+        else { // Hvis listen ikke er tom
+            hale.neste = nyNode; // Nåværende halens neste-peker settes til ny node
+            nyNode.forrige = hale; // Nye nodes forrige-peker settes til nåværende hale
+            hale = nyNode; // Halen "flyttes" og peker på den nye noden
+        }
+        antall++; // Øker antallet noder med 1
+        endringer++; // Øker endringer med 1
+    }
+
+    @Override
+    public int antall() {
+        return antall;
+    }
+
+    @Override
+    public boolean tom() {
+        return antall == 0;
+    }
+
+    // Oppgave 2
+    // Metode for å returnere en tegnstreng med listens verdier
+    @Override
+    public String toString() {
+        if (antall == 0) {
+            return "[]";
+        }
+        // Lager en StringBuilder for å bygge strengen
+        StringBuilder streng = new StringBuilder();
+
+        // Setter nåværende node til hode, dvs. første noden i lista
+        Node<T> nåværendeNode = hode;
+        // append = legger til i strengen
+        streng.append('[');
+        streng.append(nåværendeNode.verdi);
+        // Går videre til neste node
+        nåværendeNode = nåværendeNode.neste;
+
+        // Løkke for å legge til resten av verdiene til nodene
+        while (nåværendeNode != null) {
+            streng.append(", ");
+            streng.append(nåværendeNode.verdi);
+            nåværendeNode = nåværendeNode.neste;
+        }
+        streng.append(']');
+        // Gjør om StringBuilderen til String og returnerer
+        return streng.toString();
+    }
+
+    /* Metode for å returnere en tegnstreng motsatt vei,
+     gjør på samme måte som forrige, men starter bakers og bruker
+     derfor forrige-pekerne*/
+    public String omvendtString() {
+        if (antall == 0){
+            return "[]";
+        }
+
+        StringBuilder streng = new StringBuilder();
+
+        Node<T> nåværendeNode = hale;
+        streng.append('[');
+        streng.append(nåværendeNode.verdi);
+        nåværendeNode = nåværendeNode.forrige;
+
+        while (nåværendeNode != null) {
+            streng.append(", ");
+            streng.append(nåværendeNode.verdi);
+            nåværendeNode = nåværendeNode.forrige;
+        }
+        streng.append(']');
+        return streng.toString();
+    }
+
+    @Override
+    // Metode som legger inn nye noder med verdier
+    public boolean leggInn(T verdi) {
+        Objects.requireNonNull(verdi, "Kan ikke legge inn null-verdier");
+
+        if (antall == 0) {
+            // Hvis lista er tom, opprettes en ny node som blir både hode og hale,
+            // og pekerne settes til null
+            hode = hale = new Node<>(verdi, null, null);
+        } else {
+            /* Hvis lista ikke er tom, opprettes en ny node som legges til på slutten.
+            Halen settes til å peke på den nye noden.
+            Setter den nye nodens forrige-peker til nåværende hale, altså det forrige elementet */
+            hale = hale.neste = new Node<>(verdi, hale, null);
+        }
+        antall ++;
+        endringer++;
+        // Returnerer true hvis innsettingen er vellykket
+        return true;
+    }
+
+    // Oppgave 3
+    // Metode for å finne en node med en gitt indeks
+    private Node<T> finnNode(int indeks) {
+        // Passer på referansen til noden
+        Node<T> nåværendeNode;
+
+        // Hvis indeksen er mindre enn halvparten av antall
+        if (indeks < (antall/2)){
+            nåværendeNode = hode; // Starter fra hodet
+            for (int i = 0; i < indeks; i++) {
+                // Flytter til neste node
+                nåværendeNode = nåværendeNode.neste;
+            }
+        } else { // Hvis indeksen er større eller lik halvparten av antallet
+            nåværendeNode = hale; // Starter fra halen, og går bakover
+            for (int i = antall-1; i > indeks; i--) {
+                nåværendeNode = nåværendeNode.forrige;
+            }
+        }
+        // Returnerer noden som er funnet på indeksen
+        return nåværendeNode;
+    }
+
+    // Metode for å hente ut en verdi til en gitt indeks
+    @Override
+    public T hent(int indeks) {
+        // sjekker at indeksen er gyldig. Setter leggInn til false, fordi man ikke skal legge inn noe
+        indeksKontroll(indeks, false);
+
+        // Finner noden på den aktuelle indeksen
+        Node<T> node = finnNode(indeks);
+
+        // Returnerer nodens verdi
+        return node.verdi;
+    }
+
+    // Metode for å oppdatere/erstatte en verdi på en gitt indeks
+    // (returnerer gammel verdi)
+    @Override
+    public T oppdater(int indeks, T nyverdi) {
+        // Sjekker om nyverdi er null
+        Objects.requireNonNull(nyverdi, "Kan ikke bruke en null-verdi");
+        // Sjekker at indeksen er gyldig. LeggInn er false fordi vi ikke skal legge inn ny node
+        indeksKontroll(indeks, false);
+
+        // Finner noden på den aktuelle indeksen
+        Node<T> node = finnNode(indeks);
+        // Lagrer den gamle verdien til noden
+        T gammelVerdi = node.verdi;
+
+        // Oppdaterer nodens verdi til den nye verdien
+        node.verdi = nyverdi;
+        // Øker antall endringer
+        endringer++;
+
+        // Returnerer den opprinnelige verdien
+        return gammelVerdi;
+    }
+
+
+    // Metode for å returnerer en ny liste med verdier fra et halvåpent intervall
+    public Liste<T> subliste(int fra, int til) {
+        fraTilKontroll(fra, til);
+        // Oppretter en ny dobbeltlenket liste
+        DobbeltLenketListe<T> nyListe = new DobbeltLenketListe<>();
+
+        // Hvis intervallet er tomt, returnerer den tomme lista.
+        if (fra == til) {
+            return nyListe;
+        }
+        // Finner startnoden (som har indeks fra)
+        Node<T> nåværendeNode = finnNode(fra);
+
+        // Går gjennom intervallet [fra, til>
+        for (int i = fra; i < til; i++) {
+            nyListe.leggTil(nåværendeNode.verdi); // Legger til verdien i den nye lista
+            nåværendeNode = nåværendeNode.neste; // Går til videre til neste node
+        }
+        return nyListe; // Returnerer den nye lista
+    }
+
+    // Oppgave 4
+    // Metode som returnerer indeksen til første element med aktuell verdi
+    @Override
+    public int indeksTil(T verdi) {
+        Node<T> nåværendeNode = hode;
+
+        // Går gjennom hver node i lista
+        for (int i = 0; i < antall; i++) {
+            // Sjekker om verdien i nåværende node er lik verdien som letes etter
+            if (nåværendeNode.verdi.equals(verdi)) {
+                // Returnerer indeksen hvis verdien finnes
+                return i;
+            }
+            // Flytter pekeren til neste node i lista
+            nåværendeNode = nåværendeNode.neste;
+        }
+        // Hvis verdien ikke finnes, returneres -1
+        return -1;
+    }
+
+    // Metode som returnerer true hvis verdien finnes, og false hvis ikke
+    @Override
+    public boolean inneholder(T verdi) {
+        // Bruker indeksTil-metoden
+        // Sjekker om verdien finnes, dvs. metoden returnerer ikke -1, og returnerer true
+        return indeksTil(verdi) != -1;
+    }
+
+    // Oppgave 5
+    // Metode som legger en verdi inn på en gitt indeks.
+    @Override
+    public void leggInn(int indeks, T verdi) {
+        Objects.requireNonNull(verdi, "Ikke lov å legge inn nullpekere");
+        indeksKontroll(indeks, true);
+
+        // Hvis indeks er 0, skal verdien legges inn først, ved hjelp av hjelpemetoden
+        if (indeks == 0) {
+            leggInnFørst(verdi);
+        }
+        // Hvis indeks er lik antall, skal verdien legges bakerst
+        else if (indeks == antall) {
+            leggInnSist(verdi);
+        }
+        // Hvis den skal legges midt i lista
+        else {
+            leggInnMidten(indeks, verdi);
+        }
+        antall++;
+        endringer++;
+    }
+
+    // Hjelpemetode for å legge inn først i lista
+    public void leggInnFørst(T verdi) {
+        // Hvis lista er tom, settes hode og hale til den nye noden
+        if (antall == 0) {
+            hode = hale = new Node<>(verdi, null, null);
+        }
+        // Ellers legges noden inn foran hodet
+        else {
+            // Lager ny node med neste-peker på hode, setter hode til å være den nye noden
+            hode = hode.forrige = new Node<>(verdi, null, hode);
+        }
+    }
+
+    // Hjelpemetode for å legge inn sist i lista
+    public void leggInnSist(T verdi) {
+        // Hvis lista er tom, settes både hode og hale til den nye noden
+        if (antall == 0) {
+            hode = hale = new Node<>(verdi, null, null);
+        }
+        // Ellers legges noden bakerst
+        else {
+            // Lager ny node med forrige-peker på hale, setter halen til å være den nye noden
+            hale = hale.neste = new Node<>(verdi, hale, null);
+        }
+    }
+
+    // Hjelpemetode for å legge inn midt i lista
+    public void leggInnMidten(int indeks, T verdi) {
+        // Starter ved hodet
+        Node<T> nåværendeNode = hode;
+
+        // For-løkke starter på 1 fordi den første noden er allerede pekt på over.
+        // Går gjennom lista til noden på indeks - 1
+        for (int i = 1; i < indeks; i++) {
+            // Flytter en node videre for hver gjennomgang
+            nåværendeNode = nåværendeNode.neste;
+        }
+
+        // Lager en ny node som plasseres mellom nåværendenode og den neste
+        Node<T> nyNode = new Node<>(verdi, nåværendeNode, nåværendeNode.neste);
+        // Setter den nye noden som den forrige noden til nåværendeNode.neste
+        nåværendeNode.neste.forrige = nyNode;
+        // Oppdaterer nåværendeNode.neste til å peke på den nye noden
+        nåværendeNode.neste = nyNode;
+    }
+
+
+    // Oppgave 6
+    @Override
+    public T fjern(int indeks) {
+        indeksKontroll(indeks, false);
+
+        // Finner noden som skal fjernes med finnNode-metoden
+        Node<T> q = finnNode(indeks);
+        // Noden før
+        Node<T> p = q.forrige;
+        // Noden etter
+        Node<T> r = q.neste;
+
+        // Bruker hjelpemetoden fjernNode for å fjerne noden
+        return fjernNode(p, q, r);
+    }
+
+    // Hjelpemetode for å fjerne node q, ved å koble sammen pekerne til p og r
+    public T fjernNode(Node<T> p, Node<T> q, Node<T> r) {
+        // Hvis p ikke er null, betyr det at man er i midten et sted
+        if (p != null) {
+            p.neste = r; // flytter p sin neste-peker til r
+        } else { // Hvis p er null (dvs. q er første node)
+            hode = r; // Setter da hode til å peke på r
+        }
+
+        // Hvis r ikke er null, betyr det at man er i midten et sted
+        if (r != null) {
+            r.forrige = p; // flytter r sin forrige peker til p
+        } else { // Hvis r er null (dvs. q er siste node)
+            hale = p; // Setter da hale til å peke på p
+        }
+
+        // Henter verdien til noden som fjernes
+        T fjernetVerdi = q.verdi;
+
+        // Setter pekerne til noden som fjernes til null
+        q.forrige = null;
+        q.neste = null;
+
+        antall--;
+        endringer++;
+
+        return fjernetVerdi;
+    }
+
+    // Metode som fjerner første verdien av verdi
+    @Override
+    public boolean fjern(T verdi) {
+        // Hvis verdien er null, returneres false
+        if (verdi == null) {
+            return false;
+        }
+
+        // Starter på starten (hode)
+        Node<T> nåværendeNode = hode;
+
+        // Går gjennom lista så lenge ikke nåværendeNode er null(dvs. så lenge det er noder i lista)
+        while (nåværendeNode != null) {
+            // Hvis verdien til nåværendeNode tilsvarer verdien vi leter etter
+            if (nåværendeNode.verdi.equals(verdi)) {
+                Node<T> p = nåværendeNode.forrige; // Noden før nåværendeNode
+                Node<T> q = nåværendeNode; // Noden som skal fjernes/nåværendeNoe
+                Node<T> r = nåværendeNode.neste; // Noden etter
+
+                // Fjerner noden med verdien med hjelpemetoden fjernNode
+                fjernNode(p, q, r);
+                // Returnerer true for å signalisere at noden er fjernet
+                return true;
+            }
+            // Hvis vi ikke har funnet verdien, går man til neste node
+            nåværendeNode = nåværendeNode.neste;
+        }
+        // False hvis man ikke finner verdien
+        return false;
+    }
+// Iterator-metoder som gjør det mulig å iterere gjennom lista
+    // Oppgave 8
+    @Override
+    public Iterator<T> iterator() {
+        // Returnerer en ny instans av iteratoren, starter fra begynnelsen
+        return new DobbeltLenketListeIterator();
+    }
+
+    public Iterator<T> iterator(int indeks) {
+        // Sjekker om indeksen er gyldig
+        indeksKontroll(indeks, false);
+        // Returnerer ny iterator som starter ved aktuell indeks
+        return new DobbeltLenketListeIterator(indeks);
+    }
+
+    private class DobbeltLenketListeIterator implements Iterator<T> {
+        private Node<T> denne;
+        private boolean kanFjerne;
+        private int iteratorendringer;
+
+        private DobbeltLenketListeIterator() {
+            denne = hode;                   // Starter på første i lista
+            kanFjerne = false;              // Settes true når next() kalles
+            iteratorendringer = endringer;  // Teller endringer
+        }
+
+        // Konstruktør, starter iteratoren ved aktuell indeks
+        private DobbeltLenketListeIterator(int indeks) {
+            // Finner noden på den aktuelle indeksen, og setter den til "denne"
+            denne = finnNode(indeks);
+            // Lagrer antallet endringer
+            iteratorendringer = endringer;
+            // Kan ikke fjerne noe før next() er kalt
+            kanFjerne = false;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return denne != null;
+        }
+
+        @Override
+        public T next() {
+            // Sjekker om listen er endret siden iteratoren ble opprettet
+            if (iteratorendringer != endringer)
+                throw new ConcurrentModificationException("Iteratorendringer er ikke lik endringer");
+
+            // Hvis det ikke er flere elementer igjen
+            if (!hasNext())
+                throw new NoSuchElementException("Det er ikke flere elementer igjen");
+
+            // Henter verdien til nåværende node
+            T verdi = denne.verdi;
+            // Flytter "denne" til neste node
+            denne = denne.neste;
+            // Kan fjerne noe
+            kanFjerne = true;
+            // Returnerer verdien til nåværende node
+            return verdi;
+        }
+}
